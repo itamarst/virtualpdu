@@ -1,4 +1,4 @@
 libvirt-python>=6.0.0 # LGPLv2+
-pysnmp-lextudio>=5.0.0 # BSD
+pysnmp>=6.0.0 # BSD
 pyasn1>=0.5.1 # BSD
 pyasn1-modules>=0.3.0 # BSD
