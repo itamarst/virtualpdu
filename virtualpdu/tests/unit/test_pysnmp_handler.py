@@ -114,7 +114,7 @@ class SnmpServiceMessageReceivedTest(unittest.TestCase):
     def test_get_with_unknown_oid_replies_nosuchinstance(self):
 
         patcher = patch('virtualpdu.pdu.pysnmp_handler'
-                        '.GetCommandResponder.sendRsp')
+                        '.GetCommandResponder.sendVarBinds')
         mock = patcher.start()
 
         self.snmp_engine.msgAndPduDsp.receiveMessage(
@@ -134,7 +134,7 @@ class SnmpServiceMessageReceivedTest(unittest.TestCase):
         self.power_unit_mock.oid_mapping[(1, 1)].value = OctetString('test')
 
         patcher = patch('virtualpdu.pdu.pysnmp_handler'
-                        '.GetCommandResponder.sendRsp')
+                        '.GetCommandResponder.sendVarBinds')
         mock = patcher.start()
 
         self.snmp_engine.msgAndPduDsp.receiveMessage(
@@ -155,7 +155,7 @@ class SnmpServiceMessageReceivedTest(unittest.TestCase):
         self.power_unit_mock.oid_mapping[(1, 2)].value = Integer(5)
 
         patcher = patch('virtualpdu.pdu.pysnmp_handler'
-                        '.NextCommandResponder.sendRsp')
+                        '.NextCommandResponder.sendVarBinds')
         mock = patcher.start()
 
         self.snmp_engine.msgAndPduDsp.receiveMessage(

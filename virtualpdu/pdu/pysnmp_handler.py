@@ -22,6 +22,7 @@ from pysnmp.entity import engine
 from pysnmp.entity.rfc3413 import cmdrsp
 from pysnmp.entity.rfc3413 import context
 from pysnmp.proto.api import v2c
+from pysnmp.proto.rfc1905 import ResponsePDU
 
 # pysnmp is distributed under the BSD license.
 
@@ -73,7 +74,7 @@ class GetCommandResponder(cmdrsp.GetCommandResponder):
         self.__power_unit = power_unit
 
     def handleMgmtOperation(self, snmpEngine, stateReference,
-                            contextName, req_pdu, acInfo):
+                            contextName, req_pdu):
 
         if self.__context_name == contextName:
 
@@ -86,7 +87,7 @@ class GetCommandResponder(cmdrsp.GetCommandResponder):
                            else v2c.NoSuchInstance('')))
                 )
 
-            self.sendRsp(snmpEngine, stateReference, 0, 0, var_binds)
+            self.sendVarBinds(snmpEngine, stateReference, 0, 0, var_binds)
 
         self.releaseStateInformation(stateReference)
 
@@ -99,7 +100,7 @@ class NextCommandResponder(cmdrsp.NextCommandResponder):
         self.__power_unit = power_unit
 
     def handleMgmtOperation(self, snmpEngine, stateReference,
-                            contextName, req_pdu, acInfo):
+                            contextName, req_pdu):
 
         if self.__context_name == contextName:
 
@@ -118,7 +119,7 @@ class NextCommandResponder(cmdrsp.NextCommandResponder):
 
                 var_binds.append((oid, val))
 
-            self.sendRsp(snmpEngine, stateReference, 0, 0, var_binds)
+            self.sendVarBinds(snmpEngine, stateReference, 0, 0, var_binds)
 
         self.releaseStateInformation(stateReference)
 
@@ -133,7 +134,7 @@ class SetCommandResponder(cmdrsp.SetCommandResponder):
         self.__logger = logging.getLogger(__name__)
 
     def handleMgmtOperation(self, snmpEngine, stateReference,
-                            contextName, req_pdu, acInfo):
+                            contextName, req_pdu):
 
         if self.__context_name == contextName:
 
@@ -156,7 +157,7 @@ class SetCommandResponder(cmdrsp.SetCommandResponder):
 
                 var_binds.append((oid, val))
 
-            self.sendRsp(snmpEngine, stateReference, 0, 0, var_binds)
+            self.sendVarBinds(snmpEngine, stateReference, 0, 0, var_binds)
 
         self.releaseStateInformation(stateReference)
 
