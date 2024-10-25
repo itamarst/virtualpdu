@@ -15,7 +15,7 @@
 import random
 from unittest import mock
 
-from pysnmp.entity.rfc3413.oneliner import cmdgen
+from pysnmp.entity.rfc3413 import cmdgen
 
 from virtualpdu.pdu import pysnmp_handler
 from virtualpdu.tests import base

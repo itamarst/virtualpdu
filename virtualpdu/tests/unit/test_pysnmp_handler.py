@@ -64,21 +64,10 @@ class SnmpServiceMessageReceivedTest(unittest.TestCase):
     def setUp(self):
         self.power_unit_mock = Mock()
         self.power_unit_mock.oid_mapping = {}
-
-        for pysnmp_package in ('asyncore', 'asynsock'):
-            try:
-                self.socket_patcher = patch('pysnmp.carrier.%s.dgram'
-                                            '.base.DgramSocketTransport'
-                                            '.openServerMode' % pysnmp_package)
-                self.socket_patcher.start()
-
-                break
-
-            except ImportError:
-                continue
-
-        else:
-            raise ImportError('Monkeys failed at pysnmp patching!')
+        self.socket_patcher = patch('pysnmp.carrier.asyncio.dgram'
+                                    '.base.DgramAsyncioProtocol'
+                                    '.openServerMode')
+        self.socket_patcher.start()
 
         self.snmp_engine = create_snmp_engine(self.power_unit_mock,
                                               '127.0.0.1', 161,

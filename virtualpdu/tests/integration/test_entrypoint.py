@@ -19,7 +19,7 @@ import sys
 import tempfile
 import threading
 
-from pysnmp.entity.rfc3413.oneliner import cmdgen
+from pysnmp.entity.rfc3413 import cmdgen
 from retrying import retry
 
 from virtualpdu.pdu import apc_rackpdu

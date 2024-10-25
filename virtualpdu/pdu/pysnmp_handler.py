@@ -15,7 +15,7 @@
 import logging
 import threading
 
-from pysnmp.carrier.asynsock.dgram import udp
+from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp import debug
 from pysnmp.entity import config
 from pysnmp.entity import engine

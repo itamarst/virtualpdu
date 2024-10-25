@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from pysnmp.proto.api import v2c
+from pysnmp.hlapi.asyncio import auth
 
 from virtualpdu.pdu.pysnmp_handler import auth_protocols
 from virtualpdu.pdu.pysnmp_handler import priv_protocols
@@ -57,11 +58,11 @@ class SnmpClient(object):
         self.command_generator = cmdgen.CommandGenerator()
 
         if self.snmp_version < 3:
-            self.auth_data = cmdgen.CommunityData(
+            self.auth_data = auth.CommunityData(
                 self.community, mpModel=self.snmp_version
             )
         else:
-            self.auth_data = cmdgen.UsmUserData(
+            self.auth_data = auth.UsmUserData(
                 self.user,
                 self.auth_key, self.priv_key,
                 self.auth_protocol, self.priv_protocol
