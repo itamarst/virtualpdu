@@ -21,10 +21,11 @@ from virtualpdu.tests import snmp_error_indications
 
 
 class SnmpClient(object):
-    def __init__(self, oneliner_cmdgen, host, port, **snmp_options):
+    def __init__(self, oneliner_cmdgen, host, port, auth_module=auth, **snmp_options):
         self.host = host
         self.port = port
         self.snmp_version = snmp_options.get('snmp_version')
+        self._auth_module = auth_module
 
         # SNMPv1/v2c options
         self.community = snmp_options.get('community')
@@ -58,11 +59,11 @@ class SnmpClient(object):
         self.command_generator = cmdgen.CommandGenerator()
 
         if self.snmp_version < 3:
-            self.auth_data = auth.CommunityData(
+            self.auth_data = self._auth_module.CommunityData(
                 self.community, mpModel=self.snmp_version
             )
         else:
-            self.auth_data = auth.UsmUserData(
+            self.auth_data = self._auth_module.UsmUserData(
                 self.user,
                 self.auth_key, self.priv_key,
                 self.auth_protocol, self.priv_protocol

@@ -31,11 +31,12 @@ class TestSnmpClient(base.TestCase):
         self.command_generator_mock = mock.Mock()
         self.pysnmp_mock = mock.Mock()
         self.oneliner_cmdgen = mock.Mock()
+        self.auth_module = mock.Mock()
 
         self.oneliner_cmdgen.CommandGenerator.return_value = \
             self.command_generator_mock
 
-        self.oneliner_cmdgen.CommunityData.return_value = \
+        self.auth_module.CommunityData.return_value = \
             sentinel.community_data
 
         self.oneliner_cmdgen.UdpTransportTarget.return_value = \
@@ -43,6 +44,7 @@ class TestSnmpClient(base.TestCase):
 
         self.snmp_client = snmp_client.SnmpClient(
             oneliner_cmdgen=self.oneliner_cmdgen,
+            auth_module=self.auth_module,
             host=sentinel.hostname,
             port=sentinel.port,
             community=sentinel.community,
@@ -79,7 +81,7 @@ class TestSnmpClient(base.TestCase):
             .assert_called_with((sentinel.hostname, sentinel.port),
                                 timeout=sentinel.timeout,
                                 retries=sentinel.retries)
-        self.oneliner_cmdgen.CommunityData\
+        self.auth_module.CommunityData\
             .assert_called_with(sentinel.community, mpModel=0)
         self.command_generator_mock.getCmd.assert_called_with(
             sentinel.community_data,
@@ -110,7 +112,7 @@ class TestSnmpClient(base.TestCase):
             .assert_called_with((sentinel.hostname, sentinel.port),
                                 timeout=sentinel.timeout,
                                 retries=sentinel.retries)
-        self.oneliner_cmdgen.CommunityData\
+        self.auth_module.CommunityData\
             .assert_called_with(sentinel.community, mpModel=0)
         self.command_generator_mock.setCmd.assert_called_with(
             sentinel.community_data,
@@ -132,7 +134,7 @@ class TestSnmpClient(base.TestCase):
                                 timeout=sentinel.timeout,
                                 retries=sentinel.retries)
 
-        self.oneliner_cmdgen.CommunityData \
+        self.auth_module.CommunityData \
             .assert_called_with(sentinel.community, mpModel=0)
 
         self.command_generator_mock.setCmd.assert_called_with(
