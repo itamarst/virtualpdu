@@ -20,6 +20,7 @@ import tempfile
 import threading
 
 from pysnmp.entity.rfc3413 import cmdgen
+from pysnmp.hlapi import asyncio as hlapi_asyncio
 from retrying import retry
 
 from virtualpdu.pdu import apc_rackpdu
@@ -161,8 +162,7 @@ outlet_default_state = invalid_mode
 
 def _turn_off_outlet(community, listen_address, outlet, port):
     outlet_oid = apc_rackpdu.rPDU_outlet_control_outlet_command + (outlet,)
-    snmp_client_ = snmp_client.SnmpClient(cmdgen,
-                                          listen_address,
+    snmp_client_ = snmp_client.SnmpClient(listen_address,
                                           port,
                                           community=community,
                                           timeout=1,

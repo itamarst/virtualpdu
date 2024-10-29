@@ -12,20 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
+
 from pysnmp.proto.api import v2c
-from pysnmp.hlapi.asyncio import auth
+from pysnmp.hlapi.asyncio import auth, transport, cmdgen
+from pysnmp.hlapi.asyncio.context import ContextData
+from pysnmp.hlapi import asyncio as hlapi_asyncio
 
 from virtualpdu.pdu.pysnmp_handler import auth_protocols
 from virtualpdu.pdu.pysnmp_handler import priv_protocols
 from virtualpdu.tests import snmp_error_indications
 
 
+class ContextData(ContextData):
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+
 class SnmpClient(object):
-    def __init__(self, oneliner_cmdgen, host, port, auth_module=auth, **snmp_options):
+    def __init__(self, host, port, hlapi_module=hlapi_asyncio, auth_module=auth, transport_module=transport, **snmp_options):
         self.host = host
         self.port = port
         self.snmp_version = snmp_options.get('snmp_version')
         self._auth_module = auth_module
+        self._hlapi_module = hlapi_module
+        self._transport_module = transport_module
 
         # SNMPv1/v2c options
         self.community = snmp_options.get('community')
@@ -54,10 +66,6 @@ class SnmpClient(object):
             else:
                 self.snmp_version = 0
 
-        cmdgen = oneliner_cmdgen
-
-        self.command_generator = cmdgen.CommandGenerator()
-
         if self.snmp_version < 3:
             self.auth_data = self._auth_module.CommunityData(
                 self.community, mpModel=self.snmp_version
@@ -69,19 +77,21 @@ class SnmpClient(object):
                 self.auth_protocol, self.priv_protocol
             )
 
-        self.transport = cmdgen.UdpTransportTarget((self.host, self.port),
+        self.transport = self._transport_module.UdpTransportTarget((self.host, self.port),
                                                    timeout=self.timeout,
                                                    retries=self.retries)
+        self.engine = self._hlapi_module.SnmpEngine()
 
     def get_one(self, oid):
         (error_indication,
          error_status,
          error_index,
-         var_binds) = self.command_generator.getCmd(
+         var_binds) = asyncio.run(self._hlapi_module.getCmd(
+             self.engine,
             self.auth_data, self.transport, oid,
-            contextEngineId=self.context_engine_id,
-            contextName=self.context_name
-        )
+            ContextData(contextEngineId=self.context_engine_id,
+                        contextName=self.context_name)
+        ))
 
         self._handle_error_indication(error_indication)
 
@@ -92,11 +102,12 @@ class SnmpClient(object):
         (error_indication,
          error_status,
          error_index,
-         var_binds) = self.command_generator.nextCmd(
+         var_binds) = asyncio.run(self._hlapi_module.nextCmd(
+             self.engine,
             self.auth_data, self.transport, oid,
-            contextEngineId=self.context_engine_id,
-            contextName=self.context_name
-        )
+            ContextData(contextEngineId=self.context_engine_id,
+                        contextName=self.context_name)
+        ))
 
         self._handle_error_indication(error_indication)
         for varBindTableRow in var_binds:
@@ -107,11 +118,12 @@ class SnmpClient(object):
         (error_indication,
          error_status,
          error_index,
-         var_binds) = self.command_generator.setCmd(
+         var_binds) = asyncio.run(self._hlapi_module.setCmd(
+             self.engine,
             self.auth_data, self.transport, (oid, value),
-            contextEngineId=self.context_engine_id,
-            contextName=self.context_name
-        )
+            ContextData(contextEngineId=self.context_engine_id,
+                        contextName=self.context_name)
+        ))
 
         self._handle_error_indication(error_indication)
 

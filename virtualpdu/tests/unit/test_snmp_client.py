@@ -18,33 +18,37 @@ from unittest.mock import sentinel
 from pysnmp.proto import errind
 from pysnmp.proto.errind import ErrorIndication
 from pysnmp.proto.rfc1905 import NoSuchInstance
+
 import testtools
 
 from virtualpdu.tests import base
 from virtualpdu.tests import snmp_client
 from virtualpdu.tests import snmp_error_indications
 
+ContextData = snmp_client.ContextData
+
 
 class TestSnmpClient(base.TestCase):
     def setUp(self):
         super(TestSnmpClient, self).setUp()
-        self.command_generator_mock = mock.Mock()
+        self.hlapi_mock = mock.Mock()
+        self.hlapi_mock.getCmd = mock.AsyncMock()
+        self.hlapi_mock.setCmd = mock.AsyncMock()
+        self.hlapi_mock.nextCmd = mock.AsyncMock()
         self.pysnmp_mock = mock.Mock()
-        self.oneliner_cmdgen = mock.Mock()
         self.auth_module = mock.Mock()
-
-        self.oneliner_cmdgen.CommandGenerator.return_value = \
-            self.command_generator_mock
+        self.transport_module = mock.Mock()
 
         self.auth_module.CommunityData.return_value = \
             sentinel.community_data
 
-        self.oneliner_cmdgen.UdpTransportTarget.return_value = \
+        self.transport_module.UdpTransportTarget.return_value = \
             sentinel.udp_transport_target
 
         self.snmp_client = snmp_client.SnmpClient(
-            oneliner_cmdgen=self.oneliner_cmdgen,
+            hlapi_module=self.hlapi_mock,
             auth_module=self.auth_module,
+            transport_module=self.transport_module,
             host=sentinel.hostname,
             port=sentinel.port,
             community=sentinel.community,
@@ -71,28 +75,29 @@ class TestSnmpClient(base.TestCase):
 
     def test_get_one(self):
         oid = (1, 3, 6)
-        self.command_generator_mock.getCmd.return_value = \
+        self.hlapi_mock.getCmd.return_value = \
             (None, 0, 0, [(oid, '42 thousands')])
         value = self.snmp_client.get_one(oid)
 
         self.assertEqual('42 thousands', value)
 
-        self.oneliner_cmdgen.UdpTransportTarget\
+        self.transport_module.UdpTransportTarget\
             .assert_called_with((sentinel.hostname, sentinel.port),
                                 timeout=sentinel.timeout,
                                 retries=sentinel.retries)
         self.auth_module.CommunityData\
             .assert_called_with(sentinel.community, mpModel=0)
-        self.command_generator_mock.getCmd.assert_called_with(
+        self.hlapi_mock.getCmd.assert_called_with(
+            self.snmp_client.engine,
             sentinel.community_data,
             sentinel.udp_transport_target,
-            oid, contextEngineId=None, contextName=''
+            oid, ContextData(contextEngineId=None, contextName='')
         )
 
     def test_get_with_all_possible_error_indications(self):
         oid = (1, 3, 6)
         for class_name, error_indication in self.all_error_indications:
-            self.command_generator_mock.getCmd.return_value = \
+            self.hlapi_mock.getCmd.return_value = \
                 (error_indication, 0, 0, [])
 
             exception_class = snmp_error_indications.__dict__.get(class_name)
@@ -102,34 +107,35 @@ class TestSnmpClient(base.TestCase):
 
     def test_set(self):
         oid = (1, 3, 6)
-        self.command_generator_mock.setCmd.return_value = \
+        self.hlapi_mock.setCmd.return_value = \
             (None, 0, 0, [(oid, '43 thousands')])
         value = self.snmp_client.set(oid, '43 thousands')
 
         self.assertEqual('43 thousands', value)
 
-        self.oneliner_cmdgen.UdpTransportTarget\
+        self.transport_module.UdpTransportTarget\
             .assert_called_with((sentinel.hostname, sentinel.port),
                                 timeout=sentinel.timeout,
                                 retries=sentinel.retries)
         self.auth_module.CommunityData\
             .assert_called_with(sentinel.community, mpModel=0)
-        self.command_generator_mock.setCmd.assert_called_with(
+        self.hlapi_mock.setCmd.assert_called_with(
+            self.snmp_client.engine,
             sentinel.community_data,
             sentinel.udp_transport_target,
             (oid, '43 thousands'),
-            contextEngineId=None, contextName=''
+            ContextData(contextEngineId=None, contextName='')
         )
 
     def test_set_no_such_instance(self):
         oid = (1, 3, 6)
-        self.command_generator_mock.setCmd.return_value = \
+        self.hlapi_mock.setCmd.return_value = \
             (None, 0, 0, [(oid, NoSuchInstance(''))])
         value = self.snmp_client.set(oid, '43 thousands')
 
         self.assertEqual(NoSuchInstance(''), value)
 
-        self.oneliner_cmdgen.UdpTransportTarget \
+        self.transport_module.UdpTransportTarget \
             .assert_called_with((sentinel.hostname, sentinel.port),
                                 timeout=sentinel.timeout,
                                 retries=sentinel.retries)
@@ -137,17 +143,18 @@ class TestSnmpClient(base.TestCase):
         self.auth_module.CommunityData \
             .assert_called_with(sentinel.community, mpModel=0)
 
-        self.command_generator_mock.setCmd.assert_called_with(
+        self.hlapi_mock.setCmd.assert_called_with(
+            self.snmp_client.engine,
             sentinel.community_data,
             sentinel.udp_transport_target,
             (oid, '43 thousands'),
-            contextEngineId=None, contextName=''
+            ContextData(contextEngineId=None, contextName='')
         )
 
     def test_set_with_all_possible_error_indications(self):
         oid = (1, 3, 6)
         for class_name, error_indication in self.all_error_indications:
-            self.command_generator_mock.setCmd.return_value = \
+            self.hlapi_mock.setCmd.return_value = \
                 (error_indication, 0, 0, [])
             exception_class = snmp_error_indications.__dict__.get(class_name)
 
