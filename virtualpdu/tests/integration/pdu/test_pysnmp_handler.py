@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from random import randint
+import time
+import threading
 from unittest import mock
 
 from pyasn1.type import univ
@@ -119,10 +121,10 @@ class TestSNMPPDUHarness(base.TestCase):
                                                 community='bleh')
 
         harness.start()
+        time.sleep(1)
         harness.stop()
         harness.join(timeout=5)
-
-        self.assertFalse(harness.is_alive())
+        self.assertNotIn(harness, threading.enumerate())
 
 
 class TestSNMPv3Operations(base.TestCase):

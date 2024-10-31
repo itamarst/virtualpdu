@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from asyncio import new_event_loop, set_event_loop
 import logging
 import threading
 
@@ -165,8 +166,6 @@ class SetCommandResponder(cmdrsp.SetCommandResponder):
 def create_snmp_engine(power_unit,
                        listen_address, listen_port,
                        **snmp_options):
-    from asyncio import new_event_loop, set_event_loop
-    set_event_loop(new_event_loop())
     snmp_versions = snmp_options.get('snmp_versions', [])
     community = snmp_options.get('community')
     engine_id = snmp_options.get('engine_id')
@@ -257,15 +256,10 @@ class SNMPPDUHarness(threading.Thread):
         if snmp_options.get('debug_snmp'):
             debug.setLogger(debug.Debug('all'))
 
-        self.snmp_engine = create_snmp_engine(
-            power_unit,
-            listen_address, listen_port,
-            **snmp_options
-        )
-
         self.listen_address = listen_address
         self.listen_port = listen_port
         self.power_unit = power_unit
+        self.snmp_options = snmp_options
 
         self._lock = threading.Lock()
         self._stop_requested = False
@@ -279,6 +273,18 @@ class SNMPPDUHarness(threading.Thread):
                               .format(self.listen_address, self.listen_port,
                                       self.power_unit.name))
 
+            # It's important to create this here, so the loop and registered
+            # sockets created in create_snmp_engine() are created in the
+            # correct thread.
+            self.loop = new_event_loop()
+            set_event_loop(self.loop)
+
+            self.snmp_engine = create_snmp_engine(
+                self.power_unit,
+                self.listen_address, self.listen_port,
+                **self.snmp_options
+            )
+
             self.snmp_engine.transportDispatcher.jobStarted(1)
 
         try:
@@ -291,8 +297,17 @@ class SNMPPDUHarness(threading.Thread):
     def stop(self):
         with self._lock:
             self._stop_requested = True
+            # This will be called from different thread than the asyncio loop, so
+            # we need to utilize thread-safe APIs:
+            if hasattr(self, "loop"):
+                self.loop.call_soon_threadsafe(self._stop)
+
+    def _stop(self):
+        with self._lock:
             try:
                 self.snmp_engine.transportDispatcher.jobFinished(1)
-
             except KeyError:
                 pass  # The job is not started yet and will not start
+            if hasattr(self, "loop"):
+                self.loop.stop()
+
