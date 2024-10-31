@@ -26,6 +26,8 @@ from virtualpdu.tests import snmp_client
 from virtualpdu.tests import snmp_error_indications
 
 ContextData = snmp_client.ContextData
+ObjectIdentity = snmp_client.ObjectIdentity
+ObjectType  = snmp_client.ObjectType
 
 
 class TestSnmpClient(base.TestCase):
@@ -91,7 +93,8 @@ class TestSnmpClient(base.TestCase):
             self.snmp_client.engine,
             sentinel.community_data,
             sentinel.udp_transport_target,
-            oid, ContextData(contextEngineId=None, contextName='')
+            ContextData(contextEngineId=None, contextName=''),
+            ObjectType(ObjectIdentity(oid)),
         )
 
     def test_get_with_all_possible_error_indications(self):
@@ -123,8 +126,8 @@ class TestSnmpClient(base.TestCase):
             self.snmp_client.engine,
             sentinel.community_data,
             sentinel.udp_transport_target,
-            (oid, '43 thousands'),
-            ContextData(contextEngineId=None, contextName='')
+            ContextData(contextEngineId=None, contextName=''),
+            ObjectType(ObjectIdentity(oid), '43 thousands'),
         )
 
     def test_set_no_such_instance(self):
@@ -147,8 +150,8 @@ class TestSnmpClient(base.TestCase):
             self.snmp_client.engine,
             sentinel.community_data,
             sentinel.udp_transport_target,
-            (oid, '43 thousands'),
-            ContextData(contextEngineId=None, contextName='')
+            ContextData(contextEngineId=None, contextName=''),
+            ObjectType(ObjectIdentity(oid), '43 thousands'),
         )
 
     def test_set_with_all_possible_error_indications(self):

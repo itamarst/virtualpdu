@@ -24,9 +24,29 @@ from virtualpdu.pdu.pysnmp_handler import priv_protocols
 from virtualpdu.tests import snmp_error_indications
 
 
+# Make comparable for unit testing purposes:
+
 class ContextData(ContextData):
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.__dict__ == other.__dict__
+
+
+class ObjectIdentity(hlapi_asyncio.ObjectIdentity):
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.__dict__ == other.__dict__
+
+
+class ObjectType(hlapi_asyncio.ObjectType):
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
         return self.__dict__ == other.__dict__
 
 
@@ -83,14 +103,17 @@ class SnmpClient(object):
         self.engine = self._hlapi_module.SnmpEngine()
 
     def get_one(self, oid):
+        oid = ObjectType(ObjectIdentity(oid))
         (error_indication,
          error_status,
          error_index,
          var_binds) = asyncio.run(self._hlapi_module.getCmd(
              self.engine,
-            self.auth_data, self.transport, oid,
-            ContextData(contextEngineId=self.context_engine_id,
-                        contextName=self.context_name)
+             self.auth_data,
+             self.transport,
+             ContextData(contextEngineId=self.context_engine_id,
+                         contextName=self.context_name),
+             oid,
         ))
 
         self._handle_error_indication(error_indication)
@@ -99,14 +122,17 @@ class SnmpClient(object):
         return val
 
     def get_next(self, oid):
+        oid = ObjectType(ObjectIdentity(oid))
         (error_indication,
          error_status,
          error_index,
          var_binds) = asyncio.run(self._hlapi_module.nextCmd(
              self.engine,
-            self.auth_data, self.transport, oid,
-            ContextData(contextEngineId=self.context_engine_id,
-                        contextName=self.context_name)
+             self.auth_data,
+             self.transport,
+             ContextData(contextEngineId=self.context_engine_id,
+                         contextName=self.context_name),
+             oid,
         ))
 
         self._handle_error_indication(error_indication)
@@ -115,14 +141,17 @@ class SnmpClient(object):
                 return name, val
 
     def set(self, oid, value):
+        obj = ObjectType(ObjectIdentity(oid), value)
         (error_indication,
          error_status,
          error_index,
          var_binds) = asyncio.run(self._hlapi_module.setCmd(
              self.engine,
-            self.auth_data, self.transport, (oid, value),
-            ContextData(contextEngineId=self.context_engine_id,
-                        contextName=self.context_name)
+             self.auth_data,
+             self.transport,
+             ContextData(contextEngineId=self.context_engine_id,
+                         contextName=self.context_name),
+             obj,
         ))
 
         self._handle_error_indication(error_indication)

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import random
 import time
 
@@ -54,8 +55,7 @@ class TestCoreIntegration(base.TestCase):
         )
         self.pdu_test_harness.start()
 
-        return snmp_client.SnmpClient(cmdgen,
-                                      listen_address,
+        return snmp_client.SnmpClient(listen_address,
                                       port,
                                       community=community,
                                       timeout=1,
@@ -64,7 +64,6 @@ class TestCoreIntegration(base.TestCase):
     def test_set_pdu_outlet_command_on_power_off(self):
         pdu = apc_rackpdu.APCRackPDU('my_pdu', self.core)
         snmp_client_ = self.get_harness_client(pdu)
-
         snmp_client_.set(
             self.outlet_oid,
             apc_rackpdu.APCRackPDUOutletControl.states.IMMEDIATE_OFF)
@@ -72,7 +71,6 @@ class TestCoreIntegration(base.TestCase):
         time.sleep(0.1)
         self.assertEqual(drivers.POWER_OFF,
                          self.driver.get_power_state('test'))
-
         snmp_client_.set(
             self.outlet_oid,
             apc_rackpdu.APCRackPDUOutletControl.states.IMMEDIATE_ON)
