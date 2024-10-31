@@ -39,8 +39,7 @@ class TestSNMPPDUHarness(base.TestCase):
 
         harness.start()
 
-        client = snmp_client.SnmpClient(oneliner_cmdgen=cmdgen,
-                                        host='127.0.0.1',
+        client = snmp_client.SnmpClient(host='127.0.0.1',
                                         port=port,
                                         community='bleh',
                                         timeout=1,
@@ -66,8 +65,7 @@ class TestSNMPPDUHarness(base.TestCase):
 
         harness.start()
 
-        client = snmp_client.SnmpClient(oneliner_cmdgen=cmdgen,
-                                        host='127.0.0.1',
+        client = snmp_client.SnmpClient(host='127.0.0.1',
                                         port=port,
                                         community='bleh',
                                         timeout=1,
@@ -94,8 +92,7 @@ class TestSNMPPDUHarness(base.TestCase):
 
         harness.start()
 
-        client = snmp_client.SnmpClient(oneliner_cmdgen=cmdgen,
-                                        host='127.0.0.1',
+        client = snmp_client.SnmpClient(host='127.0.0.1',
                                         port=port,
                                         community='bleh',
                                         timeout=1,

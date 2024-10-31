@@ -44,8 +44,7 @@ class PDUTestCase(base.TestCase):
         super(PDUTestCase, self).tearDown()
 
     def snmp_get(self, oid, community=None):
-        s = snmp_client.SnmpClient(cmdgen,
-                                   self.pdu_test_harness.listen_address,
+        s = snmp_client.SnmpClient(self.pdu_test_harness.listen_address,
                                    self.pdu_test_harness.listen_port,
                                    community=community or self.community,
                                    timeout=1,
@@ -53,8 +52,7 @@ class PDUTestCase(base.TestCase):
         return s.get_one(oid)
 
     def snmp_get_next(self, oid, community=None):
-        s = snmp_client.SnmpClient(cmdgen,
-                                   self.pdu_test_harness.listen_address,
+        s = snmp_client.SnmpClient(self.pdu_test_harness.listen_address,
                                    self.pdu_test_harness.listen_port,
                                    community=community or self.community,
                                    timeout=1,
@@ -62,8 +60,7 @@ class PDUTestCase(base.TestCase):
         return s.get_next(oid)
 
     def snmp_set(self, oid, value, community=None):
-        s = snmp_client.SnmpClient(cmdgen,
-                                   self.pdu_test_harness.listen_address,
+        s = snmp_client.SnmpClient(self.pdu_test_harness.listen_address,
                                    self.pdu_test_harness.listen_port,
                                    community=community or self.community,
                                    timeout=1,
