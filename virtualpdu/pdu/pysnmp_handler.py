@@ -165,7 +165,8 @@ class SetCommandResponder(cmdrsp.SetCommandResponder):
 def create_snmp_engine(power_unit,
                        listen_address, listen_port,
                        **snmp_options):
-
+    from asyncio import new_event_loop, set_event_loop
+    set_event_loop(new_event_loop())
     snmp_versions = snmp_options.get('snmp_versions', [])
     community = snmp_options.get('community')
     engine_id = snmp_options.get('engine_id')
