@@ -52,6 +52,8 @@ class ObjectType(hlapi_asyncio.ObjectType):
 
 class SnmpClient(object):
     def __init__(self, host, port, hlapi_module=hlapi_asyncio, auth_module=auth, transport_module=transport, **snmp_options):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         self.host = host
         self.port = port
         self.snmp_version = snmp_options.get('snmp_version')
@@ -107,7 +109,7 @@ class SnmpClient(object):
         (error_indication,
          error_status,
          error_index,
-         var_binds) = asyncio.run(self._hlapi_module.getCmd(
+         var_binds) = self.loop.run_until_complete(self._hlapi_module.getCmd(
              self.engine,
              self.auth_data,
              self.transport,
@@ -126,7 +128,7 @@ class SnmpClient(object):
         (error_indication,
          error_status,
          error_index,
-         var_binds) = asyncio.run(self._hlapi_module.nextCmd(
+         var_binds) = self.loop.run_until_complete(self._hlapi_module.nextCmd(
              self.engine,
              self.auth_data,
              self.transport,
@@ -145,7 +147,7 @@ class SnmpClient(object):
         (error_indication,
          error_status,
          error_index,
-         var_binds) = asyncio.run(self._hlapi_module.setCmd(
+         var_binds) = self.loop.run_until_complete(self._hlapi_module.setCmd(
              self.engine,
              self.auth_data,
              self.transport,
